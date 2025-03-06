@@ -1,0 +1,3 @@
+class Close {
+  constructor() {}
+}

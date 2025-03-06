@@ -1,0 +1,37 @@
+export interface Customer {
+  "Customer Id": string;
+  Email: string;
+  "First Name"?: string;
+  "Auto Collection": string;
+  "Card Status"?: string;
+  "Created At": string;
+  sub_ins_id?: string;
+  "Customer Portal Status": string;
+  "Net Term Days": string;
+  Taxability: string;
+  utm_content?: string;
+  utm_campaign?: string;
+  utm_medium?: string;
+  utm_source?: string;
+  utm_term?: string;
+  "Last Name"?: string;
+  gclid?: string;
+  "Offline payment method"?: string;
+  "Billing Address Country"?: string;
+  "Billing Address First Name"?: string;
+  "Billing Address Last Name"?: string;
+  "Billing Address Validation Status"?: string;
+  Company?: string;
+  "Billing Address Line1"?: string;
+  "Billing Address Line2"?: string;
+  "Billing Address City"?: string;
+  "Billing Address State"?: string;
+  "Billing Address Zip"?: string;
+  "Billing Address Company"?: string;
+  "Billing Address Phone"?: string;
+  Phone?: string;
+  "Billing Address State Code"?: string;
+  Locale?: string;
+  "Billing Address Email"?: string;
+  "Billing Address Line3"?: string;
+}
