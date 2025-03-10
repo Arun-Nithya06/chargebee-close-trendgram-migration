@@ -28,3 +28,11 @@ export enum CloseCrmContactCustomFiled {
   InstagramID = "cf_rgQvezfnL8YNbOtIgyJIiIb8YgiZ32art0w85PuQF8J",
   TrialEndsOn = "cf_rtWQB5hrD28wSvqWW0Wb8q2MCbktlw78iBZLjhWHbSj",
 }
+
+export enum OperationType {
+  CONTACT_CREATED = "ContactCreated",
+  LEAD_CREATED = "LeadCreated",
+  CONTACT_UPDATE = "ContactUpdate",
+  LEAD_UPADATE = "LeadUpdate",
+  SEARCH = "SearchOperation",
+}

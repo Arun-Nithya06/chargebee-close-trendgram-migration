@@ -12,7 +12,9 @@
   },
   "dependencies": {
     "@aws-lambda-powertools/logger": "^2.8.0",
+    "@aws-sdk/client-dynamodb": "^3.758.0",
     "@aws-sdk/client-sqs": "^3.664.0",
+    "@aws-sdk/lib-dynamodb": "^3.758.0",
     "@hubspot/api-client": "^12.0.1",
     "@middy/core": "^5.5.0",
     "@middy/http-json-body-parser": "^3.4.0",
@@ -20,12 +22,14 @@
     "dotenv": "^16.4.5",
     "middy": "^0.24.0",
     "tsx": "^4.19.1",
+    "uuid": "^11.1.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@serverless/typescript": "^3.0.0",
-    "@types/aws-lambda": "^8.10.71",
+    "@types/aws-lambda": "^8.10.147",
     "@types/node": "^16.18.114",
+    "@types/uuid": "^10.0.0",
     "esbuild": "^0.14.11",
     "json-schema-to-ts": "^1.5.0",
     "patch-package": "^8.0.0",

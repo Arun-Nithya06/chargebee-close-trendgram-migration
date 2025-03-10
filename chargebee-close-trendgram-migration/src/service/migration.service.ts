@@ -65,49 +65,58 @@ class MigrationService {
     contact: Partial<ExportCustomer>,
     subscription: ChargebeeSubscription
   ) {
-    console.log(JSON.stringify(subscription), "subscriptionsubscription");
     this.logger.info(`Contact properties : ${leadId}`);
-    const payload = {
+
+    const plan = subscription?.subscription_items?.[0]?.item_price_id
+      ? subscription.subscription_items[0].item_price_id.replace(/-USD.*/, "")
+      : undefined;
+
+    const payload: Record<string, any> = {
       lead_id: leadId,
       name: `${contact?.["First Name"] || ""} ${contact?.["Last Name"] || ""}`.trim(),
-      phones: [
-        {
-          phone: contact?.Phone || "",
-          type: "mobile",
-        },
-      ],
-      emails: [
-        {
-          email: contact?.Email || "",
-          type: "other",
-        },
-      ],
-      custom: {
-        [`${CloseCrmContactCustomFiled.CustomerID}`]: contact?.["Customer Id"],
-        [`${CloseCrmContactCustomFiled.InstagramID}`]:
-          contact?.sub_ins_id || "",
-        [`${CloseCrmContactCustomFiled.Plan}`]: subscription
-          ?.subscription_items?.[0]?.item_price_id
-          ? subscription.subscription_items[0].item_price_id.replace(
-              /-USD.*/,
-              ""
-            )
-          : "", // Subscription plan name,
-        [`${CloseCrmContactCustomFiled.InstagramURL}`]:
-          `https://www.instagram.com/${contact?.sub_ins_id}` || "",
-        [`${CloseCrmContactCustomFiled.ChargebeeURL}`]:
-          `https://trendgramio.chargebee.com/d/customers/${contact?.["Customer Id"]}` ||
-          "",
-        [`${CloseCrmContactCustomFiled.NextBillingON}`]: formatDate(
-          subscription?.next_billing_at
-        ),
-        [`${CloseCrmContactCustomFiled.TrialEndsOn}`]: formatDate(
-          subscription?.trial_end
-        ),
-        [`${CloseCrmContactCustomFiled.SubscriptionStatus}`]:
-          mapSubscriptionStatus(subscription?.status),
-      },
+      emails: contact?.Email
+        ? [
+            {
+              email: contact.Email,
+              type: "other",
+            },
+          ]
+        : [], // Removes empty email objects
+
+      [`custom.${CloseCrmContactCustomFiled.CustomerID}`]:
+        contact?.["Customer Id"] ?? null,
+      [`custom.${CloseCrmContactCustomFiled.InstagramID}`]:
+        contact?.sub_ins_id ?? null,
+      [`custom.${CloseCrmContactCustomFiled.Plan}`]:
+        plan === "0" ? "0-USD-Plan" : (plan ?? null),
+      [`custom.${CloseCrmContactCustomFiled.InstagramURL}`]: contact?.sub_ins_id
+        ? `https://www.instagram.com/${contact.sub_ins_id}`
+        : null,
+      [`custom.${CloseCrmContactCustomFiled.ChargebeeURL}`]: contact?.[
+        "Customer Id"
+      ]
+        ? `https://trendgramio.chargebee.com/d/customers/${contact["Customer Id"]}`
+        : null,
+      [`custom.${CloseCrmContactCustomFiled.NextBillingON}`]:
+        subscription?.next_billing_at
+          ? formatDate(subscription.next_billing_at)
+          : null,
+      [`custom.${CloseCrmContactCustomFiled.TrialEndsOn}`]:
+        subscription?.trial_end ? formatDate(subscription.trial_end) : null,
+      [`custom.${CloseCrmContactCustomFiled.SubscriptionStatus}`]:
+        mapSubscriptionStatus(subscription?.status) ?? null,
     };
+
+    // Remove keys with `null` values
+    Object.keys(payload).forEach((key) => {
+      if (
+        payload[key] === null ||
+        (Array.isArray(payload[key]) && payload[key].length === 0)
+      ) {
+        delete payload[key];
+      }
+    });
+
     return payload;
   }
 
@@ -134,12 +143,16 @@ class MigrationService {
     const existleadId = lead?.data?.[0]?.id;
     if (!existleadId) {
       this.logger.info(`Create a lead`);
-      const lead = await closeCRMService.createLead(leadProperties);
+      const lead = await closeCRMService.createLead(
+        leadProperties,
+        customerId ?? cutomer?.["Customer Id"]
+      );
       if (lead) return lead;
     }
     const updatedLead = await closeCRMService.updateLeadById(
       existleadId,
-      leadProperties
+      leadProperties,
+      customerId ?? cutomer?.["Customer Id"]
     );
     if (updatedLead) return updatedLead;
   }
@@ -168,10 +181,12 @@ class MigrationService {
       contactInfo,
       subScriptionDeta?.list[0]?.subscription
     );
-    console.log(JSON.stringify(contactProp), "contactProp");
     if (!existContactId) {
       this.logger.info(`Create new Contact`);
-      const newContact = await closeCRMService.createContact(contactProp);
+      const newContact = await closeCRMService.createContact(
+        contactProp,
+        contactInfo?.["Customer Id"]
+      );
       if (newContact?.id) {
         this.logger.info(
           `Sucessfully created a new Contact with id : ${newContact?.id}`
@@ -181,7 +196,8 @@ class MigrationService {
     }
     const updataedContact = await closeCRMService.updateContactById(
       existContactId,
-      contactProp
+      contactProp,
+      contactInfo?.["Customer Id"]
     );
     if (!updataedContact?.id) {
       this.logger.info(`Failed to contact update`);

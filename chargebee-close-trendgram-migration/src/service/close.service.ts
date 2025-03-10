@@ -6,6 +6,8 @@ import { CloseCustomerInfo } from "src/interface/customer";
 import { CloseCrmLead } from "src/interface/lead";
 import { SearchMetaData } from "src/interface/search";
 import { searchBuilder } from "src/utils/builder";
+import { OperationType } from "./constant";
+import loggerService from "src/db/logger";
 
 class CloseCRMService {
   logger = new Logger({ serviceName: CloseCRMService.name });
@@ -14,9 +16,7 @@ class CloseCRMService {
 
   constructor() {
     this.baseUrl = "https://api.close.com/api/v1";
-    this.apiKey =
-      process.env.CLOSE_CRM_API_KEY ||
-      "api_3fJ1n6GZKs63K7PEYMHDFe.0ra3jX9lCVAWZvD5UXsR8e"; // Securely store API key
+    this.apiKey = process.env.CLOSE_API_KEY_PRD;
   }
 
   private getAuthHeaders() {
@@ -32,42 +32,62 @@ class CloseCRMService {
       const url = new URLBuilder(
         `${this.baseUrl}/contact/${contactId}`
       ).build();
-      const response = await axios.get(url, {
-        headers: this.getAuthHeaders(),
-      });
+      const response = await axios.get(url, { headers: this.getAuthHeaders() });
+
+      await loggerService.logSuccess(
+        contactId,
+        OperationType.CONTACT_CREATED,
+        response.data
+      );
 
       return response.data as CloseCustomerInfo;
-    } catch (e) {
-      this.logger.error(
-        `Failed to fetch contact by ID: ${contactId}, error: ${JSON.stringify(e)}`
-      );
+    } catch (error) {
+      await loggerService.logError(OperationType.CONTACT_CREATED, error, {
+        contactId,
+      });
       return null;
     }
   }
 
-  public async updateContactById(
+  async updateContactById(
     contactId: string,
-    updateData: Record<string, any>
+    updateData: Record<string, any>,
+    chargebeeCustomerId: string
   ) {
     try {
       this.logger.info(`Updating Contact ID: ${contactId}`);
-      this.logger.info(`Update data is : ${JSON.stringify(updateData)}`);
       const url = new URLBuilder(
         `${this.baseUrl}/contact/${contactId}`
       ).build();
       const response = await axios.put(url, updateData, {
         headers: this.getAuthHeaders(),
       });
+
+      await loggerService.logSuccess(
+        chargebeeCustomerId,
+        OperationType.CONTACT_UPDATE,
+        {
+          contactId,
+          updateData,
+        }
+      );
+
       return response.data as CloseCustomerInfo;
-    } catch (e) {
-      this.logger.error(
-        `Failed to update contact ${contactId}: ${JSON.stringify(e)}`
+    } catch (error) {
+      await loggerService.logError(
+        chargebeeCustomerId,
+        OperationType.CONTACT_UPDATE,
+        error,
+        {
+          contactId,
+          updateData,
+        }
       );
       return null;
     }
   }
 
-  public async searchCloseCRM(
+  async searchCloseCRM(
     objectType: string,
     isCustomField: boolean,
     fieldInternalName: string,
@@ -78,7 +98,6 @@ class CloseCRMService {
       this.logger.info(
         `Searching ${objectType} with ${fieldInternalName}: ${searchValue}`
       );
-
       const url = new URLBuilder(`${this.baseUrl}/data/search/`).build();
       const payload = searchBuilder(
         objectType,
@@ -88,19 +107,26 @@ class CloseCRMService {
         exactMatch
       );
 
-      console.log(JSON.stringify(payload), "payload");
-
       const response = await axios.post(url, payload, {
         headers: this.getAuthHeaders(),
       });
+
+      await loggerService.logSuccess(searchValue, OperationType.SEARCH, {
+        objectType,
+        searchValue,
+      });
+
       return response.data as SearchMetaData;
     } catch (error) {
-      this.logger.error(`Close CRM search failed: ${JSON.stringify(error)}`);
+      await loggerService.logError(searchValue, OperationType.SEARCH, error, {
+        objectType,
+        searchValue,
+      });
       return null;
     }
   }
 
-  public async createContact(contactData: Record<string, any>) {
+  async createContact(contactData: Record<string, any>, customerId: string) {
     try {
       this.logger.info(
         `Creating new contact with data: ${JSON.stringify(contactData)}`
@@ -109,45 +135,79 @@ class CloseCRMService {
       const response = await axios.post(url, contactData, {
         headers: this.getAuthHeaders(),
       });
+
+      await loggerService.logSuccess(
+        customerId,
+        OperationType.CONTACT_CREATED,
+        contactData
+      );
+
       return response.data as CreateContact;
-    } catch (e) {
-      this.logger.error(`Failed to create contact: ${JSON.stringify(e)}`);
+    } catch (error) {
+      await loggerService.logError(
+        customerId,
+        OperationType.CONTACT_CREATED,
+        error,
+        {
+          contactData,
+        }
+      );
       return null;
     }
   }
 
-  public async createLead(leadData: Record<string, any>) {
+  async createLead(leadData: Record<string, any>, customerId: string) {
     try {
       this.logger.info(
         `Creating new lead with data: ${JSON.stringify(leadData)}`
       );
-
       const url = new URLBuilder(`${this.baseUrl}/lead`).build();
       const response = await axios.post(url, leadData, {
         headers: this.getAuthHeaders(),
       });
 
+      await loggerService.logSuccess(
+        customerId,
+        OperationType.LEAD_CREATED,
+        leadData
+      );
+
       return response.data as CloseCrmLead;
-    } catch (e) {
-      this.logger.error(`Failed to create lead: ${JSON.stringify(e)}`);
+    } catch (error) {
+      await loggerService.logError(OperationType.LEAD_CREATED, error, {
+        leadData,
+      });
       return null;
     }
   }
 
-  public async updateLeadById(leadId: string, updateData: Record<string, any>) {
+  async updateLeadById(
+    leadId: string,
+    updateData: Record<string, any>,
+    customerId: string
+  ) {
     try {
       this.logger.info(`Updating Lead ID: ${leadId}`);
-      this.logger.info(`Update data is: ${JSON.stringify(updateData)}`);
-
       const url = new URLBuilder(`${this.baseUrl}/lead/${leadId}`).build();
       const response = await axios.put(url, updateData, {
         headers: this.getAuthHeaders(),
       });
 
+      await loggerService.logSuccess(customerId, OperationType.LEAD_UPADATE, {
+        leadId,
+        updateData,
+      });
+
       return response.data as CloseCrmLead;
-    } catch (e) {
-      this.logger.error(
-        `Failed to update lead ${leadId}: ${JSON.stringify(e)}`
+    } catch (error) {
+      await loggerService.logError(
+        customerId,
+        OperationType.LEAD_UPADATE,
+        error,
+        {
+          leadId,
+          updateData,
+        }
       );
       return null;
     }

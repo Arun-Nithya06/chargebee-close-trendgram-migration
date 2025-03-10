@@ -13,27 +13,17 @@ const chargebeeHandler = async (event: APIGatewayEvent) => {
   try {
     const customers = CustomerData["customers"] as ExportCustomer[];
     logger.info(`Total customers: ${customers.length}`);
-    // const info = JSON.parse(event.body);
-    // const start = info.start;
-    // const end = info.end;
-    const payload = {
-      "Customer Id": "1nLgeV5UEKeKY47a",
-      Email: "testtrial123@gmail.com",
-      "First Name": "MR GEORDIE KORDAS",
-      "Auto Collection": "On",
-      "Offline payment method": "No Preference",
-      "Card Status": "Valid",
-      "Created At": "31-May-2024 16:47",
-      sub_ins_id: "Testtrial",
-      "Customer Portal Status": "Not Signed-up",
-      "Net Term Days": "0",
-      Taxability: "Taxable",
-    };
-    // await migrationService.pushedDataSQS(start, end, customers);
-    const data = await migrationService.migrationProceess(payload);
+    const body =
+      typeof event.body === "string" ? event.body : JSON.stringify(event.body); // Ensure it's a string
+    const parseData = JSON.parse(body);
+    await migrationService.pushedDataSQS(
+      parseData.start,
+      parseData.end,
+      customers
+    );
     return {
       statusCode: 200,
-      body: JSON.stringify({ totalCustomers: data as any }),
+      status: true,
     };
   } catch (error) {
     logger.error("Error processing Chargebee data", { error });

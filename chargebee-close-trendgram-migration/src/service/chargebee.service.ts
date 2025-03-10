@@ -11,8 +11,7 @@ class ChargebeeService {
 
   constructor() {
     this.baseUrl = "https://trendgramio.chargebee.com/api/v2";
-    this.apiKey =
-      process.env.CHARGEBEE_API_KEY ?? "live_ZpusYcNXIUvCfzsqHMuC1OTcEreoMGON";
+    this.apiKey = process.env.CHARGEBEE_API_KEY_PRD ?? "";
   }
 
   private getAuth() {
