@@ -238,6 +238,34 @@ class CloseCRMService {
       return null;
     }
   }
+
+  public async deleteLeadById(leadId: string, customerId: string) {
+    try {
+      this.logger.info(`Deleting Lead ID: ${leadId}`);
+
+      const url = new URLBuilder(`${this.baseUrl}/lead/${leadId}`).build();
+      const response = await axios.delete(url, {
+        headers: this.getAuthHeaders(),
+      });
+
+      await loggerService.logSuccess(customerId, OperationType.LEAD_DELETE, {
+        leadId,
+      });
+
+      return response.data;
+    } catch (error) {
+      await loggerService.logError(
+        customerId,
+        OperationType.LEAD_DELETE,
+        error,
+        {
+          leadId,
+        }
+      );
+
+      return null;
+    }
+  }
 }
 
 const closeCRMService = new CloseCRMService();

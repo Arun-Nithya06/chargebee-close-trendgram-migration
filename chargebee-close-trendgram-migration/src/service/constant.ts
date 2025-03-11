@@ -36,6 +36,7 @@ export enum OperationType {
   LEAD_UPADATE = "LeadUpdate",
   SEARCH = "SearchOperation",
   LEAD_FETCH = "LeadFetch",
+  LEAD_DELETE = "DeleteLead",
 }
 
 export enum PlanMapping {

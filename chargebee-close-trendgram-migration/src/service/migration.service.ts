@@ -10,6 +10,7 @@ import chargebeeService from "./chargebee.service";
 import { ChargebeeSubscription } from "src/interface/subscription";
 import { formatDate, mapSubscriptionStatus } from "src/utils/builder";
 import sqsService from "src/sqs/sqs.service";
+import { Data } from "src/interface/search";
 
 class MigrationService {
   logger = new Logger({ serviceName: MigrationService.name });
@@ -239,6 +240,68 @@ class MigrationService {
     return contactId ? await closeCRMService.getContactById(contactId) : null;
   }
 
+  public async deleteLead(id: string, customerId: string) {
+    return await closeCRMService.deleteLeadById(id, customerId);
+  }
+
+  public async deleteLeadProcrocess(
+    contactIds: Data[],
+    leadIds: Data[],
+    customerId: string
+  ) {
+    this.logger.info(`Delete lead process`);
+    this.logger.info(
+      `Delete Lead Data : ${JSON.stringify(leadIds)} and Contact Ids : ${JSON.stringify(contactIds)}`
+    );
+    if (contactIds.length === 1) {
+      const contactId = contactIds[0].id;
+      const validLeadId = contactIds[0].lead_id;
+
+      this.logger.info(
+        `Only one contact exists: Contact ID = ${contactId}, Lead ID = ${validLeadId}`
+      );
+
+      // Check if multiple lead IDs exist
+      const leadsToDelete = leadIds.filter((lead) => lead.id !== validLeadId);
+
+      if (leadsToDelete.length > 0) {
+        this.logger.info(
+          `Deleting mismatched leads: ${JSON.stringify(leadsToDelete)}`
+        );
+        for (const lead of leadsToDelete) {
+          await this.deleteLead(lead.id, customerId); // Assuming you have a deleteLead method
+        }
+      } else {
+        this.logger.info(`No mismatched leads to delete`);
+      }
+    }
+  }
+
+  public async removeDuplicateLeadAndContact(data: Partial<ExportCustomer>) {
+    this.logger.info(`Remove the duplicate contact as remove`);
+    await new Promise((resolve) => setTimeout(resolve, 10000));
+    const contacts = await closeCRMService.searchCloseCRM(
+      CloseCrmObject.Contact,
+      true,
+      CloseCrmContactCustomFiled.CustomerID,
+      data?.["Customer Id"],
+      true
+    );
+    await new Promise((resolve) => setTimeout(resolve, 10000));
+    const leads = await closeCRMService.searchCloseCRM(
+      CloseCrmObject.Lead,
+      true,
+      CloseCrmLeadCustomField["Customer ID"],
+      data?.["Customer Id"],
+      true
+    );
+    return await this.deleteLeadProcrocess(
+      contacts.data,
+      leads.data,
+      data["Customer Id"]
+    );
+  }
+
   public async processMigration(data: Partial<ExportCustomer>) {
     this.logger.info(
       `Starting migration for Customer ID: ${data["Customer Id"]}`
@@ -321,27 +384,27 @@ class MigrationService {
       return;
     }
 
-    // // Step 5: If No Contact Exists, Create Lead & Contact
-    // this.logger.info(
-    //   `No existing contact found. Creating new lead and contact.`
-    // );
-    // const newLead = await closeCRMService.createLead(
-    //   leadProperties,
-    //   data["Customer Id"]
-    // );
-    // if (!newLead?.id) {
-    //   this.logger.error(
-    //     `Failed to create lead for Customer ID: ${data["Customer Id"]}`
-    //   );
-    //   return;
-    // }
+    // Step 5: If No Contact Exists, Create Lead & Contact
+    this.logger.info(
+      `No existing contact found. Creating new lead and contact.`
+    );
+    const newLead = await closeCRMService.createLead(
+      leadProperties,
+      data["Customer Id"]
+    );
+    if (!newLead?.id) {
+      this.logger.error(
+        `Failed to create lead for Customer ID: ${data["Customer Id"]}`
+      );
+      return;
+    }
 
-    // const newContact = await this.handleIfContactExist(data, newLead.id);
-    // if (newContact?.id) {
-    //   this.logger.info(
-    //     `Successfully created lead (${newLead.id}) and contact (${newContact.id})`
-    //   );
-    // }
+    const newContact = await this.handleIfContactExist(data, newLead.id);
+    if (newContact?.id) {
+      this.logger.info(
+        `Successfully created lead (${newLead.id}) and contact (${newContact.id})`
+      );
+    }
   }
 }
 

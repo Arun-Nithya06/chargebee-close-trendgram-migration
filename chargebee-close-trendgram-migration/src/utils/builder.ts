@@ -12,7 +12,7 @@ export const searchBuilder = (
   };
 
   const payload = {
-    limit: null,
+    limit: 100,
     query: {
       type: "and",
       queries: [

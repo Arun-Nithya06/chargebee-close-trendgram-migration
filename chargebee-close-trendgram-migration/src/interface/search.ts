@@ -6,4 +6,5 @@ export interface SearchMetaData {
 export interface Data {
   __object_type: string;
   id: string;
+  lead_id?: string;
 }
