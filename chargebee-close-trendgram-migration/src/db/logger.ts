@@ -27,13 +27,8 @@ class LoggerService {
     operation: string,
     data: object
   ): Promise<void> {
-    /* The line `this.logger.info(`Log Seccess :  data : ${JSON.stringify(data)}`);` is
-  logging a message using the `info` method of the logger instance. It is creating a log message
-  indicating a successful operation with the operation name and the data associated with that
-  operation. The `operation` variable is interpolated into the log message, and the `data` object is
-  stringified using `JSON.stringify()` before being included in the log message. */
     this.logger.info(
-      `Log Seccess : ${operation} data : ${JSON.stringify(data)} and Customer Id : ${customerId}`
+      `Log successfully : ${operation} data : ${JSON.stringify(data)} and Customer Id : ${customerId}`
     );
     try {
       const params = {

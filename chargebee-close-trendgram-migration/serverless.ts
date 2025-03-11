@@ -11,7 +11,7 @@ const serverlessConfiguration: AWS = {
   ],
   provider: {
     name: "aws",
-    runtime: "nodejs14.x",
+    runtime: "nodejs16.x",
     profile: "chargebee-close-trendgram-migration",
     stage: "${opt:stage, 'dev'}", // Explicitly define stage
     apiGateway: {

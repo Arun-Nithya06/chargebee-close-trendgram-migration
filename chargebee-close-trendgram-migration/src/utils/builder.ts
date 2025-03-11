@@ -5,6 +5,12 @@ export const searchBuilder = (
   searchValue: string,
   exactMatch: boolean = true
 ) => {
+  // Define fields mapping based on objectType
+  const fieldsMapping: Record<string, string[]> = {
+    contact: ["id", "lead_id"],
+    lead: ["id"],
+  };
+
   const payload = {
     limit: null,
     query: {
@@ -31,7 +37,11 @@ export const searchBuilder = (
         },
       ],
     },
+    _fields: {
+      [objectType]: fieldsMapping[objectType] || [],
+    },
   };
+
   return payload;
 };
 
@@ -57,4 +67,32 @@ export const mapSubscriptionStatus = (status: string | undefined): string => {
   };
 
   return status ? statusMapping[status] || status : "";
+};
+
+const planMapping: Record<string, string> = {
+  "basic-discount-1-USD-Monthly": "basic-discount-1-monthly",
+  "basic-discount-2-USD-Monthly": "basic-discount-2-monthly",
+  "basic-discount-2-USD-Weekly": "basic-discount-2-weekly",
+  "basic-monthly-USD-Monthly": "basic-monthly",
+  "basic-yearly-USD-Yearly": "basic-yearly",
+  "pro-discount-1-USD-Monthly": "pro-discount-1-monthly",
+  "pro-discount-2-USD-Monthly": "pro-discount-2-monthly",
+  "pro-discount-2-USD-Weekly": "pro-discount-2-weekly",
+  "pro-monthly-USD-Monthly": "pro-monthly",
+  "pro-yearly-USD-Yearly": "pro-yearly",
+  "turbo-discount-1-USD-Monthly": "turbo-discount-1-monthly",
+  "turbo-discount-2-USD-Monthly": "turbo-discount-2-monthly",
+  "turbo-discount-2-USD-Weekly": "turbo-discount-2-weekly",
+  "turbo-monthly-USD-Monthly": "turbo-monthly",
+  "turbo-yearly-USD-Yearly": "turbo-yearly",
+};
+
+export const getMappedPlan = (itemPriceId: string): string => {
+  if (!itemPriceId) return null;
+
+  // Check in the predefined mapping
+  if (planMapping[itemPriceId]) return planMapping[itemPriceId];
+
+  // Fallback: Clean and format dynamically if not in mapping
+  return itemPriceId.replace(/-USD/g, "").toLowerCase();
 };

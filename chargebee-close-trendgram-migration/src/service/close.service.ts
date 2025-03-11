@@ -212,6 +212,32 @@ class CloseCRMService {
       return null;
     }
   }
+
+  async getLeadById(leadId: string, customerId: string) {
+    try {
+      this.logger.info(`Fetching Lead ID: ${leadId}`);
+      const url = new URLBuilder(`${this.baseUrl}/lead/${leadId}`).build();
+
+      const response = await axios.get(url, {
+        headers: this.getAuthHeaders(),
+      });
+
+      await loggerService.logSuccess(customerId, OperationType.LEAD_FETCH, {
+        leadId,
+        responseData: response.data,
+      });
+
+      return response.data as CloseCrmLead;
+    } catch (error) {
+      await loggerService.logError(
+        customerId,
+        OperationType.LEAD_FETCH,
+        error,
+        { leadId }
+      );
+      return null;
+    }
+  }
 }
 
 const closeCRMService = new CloseCRMService();

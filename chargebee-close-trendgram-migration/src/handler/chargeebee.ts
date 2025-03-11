@@ -23,7 +23,7 @@ const chargebeeHandler = async (event: APIGatewayEvent) => {
     );
     return {
       statusCode: 200,
-      status: true,
+      body: JSON.stringify({ start: parseData.start, end: parseData.end }),
     };
   } catch (error) {
     logger.error("Error processing Chargebee data", { error });

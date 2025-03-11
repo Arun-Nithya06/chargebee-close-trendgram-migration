@@ -15,14 +15,10 @@ export const chargeebeeHandler = {
 } as AWSFunction;
 
 export const closeWorker = {
-  handler: `${handlerPath(__dirname)}/worker.closeworker`,
+  handler: `${handlerPath(__dirname)}/worker.closeWorker`,
   timeout: 900,
   events: [
     {
-      // http: {
-      //   method: 'post',
-      //   path: 'lakeranch-worker',
-      // },
       sqs: {
         arn: {
           "Fn::GetAtt": ["chargebeeCloseMigrationSQS", "Arn"],

@@ -10,7 +10,7 @@ const processMessage = async (
   receiptHandle?: string,
   queueUrl?: string
 ) => {
-  const data = await migrationService.migrationProceess(parseData);
+  const data = await migrationService.processMigration(parseData);
   await sqsService.deleteFromQueue(receiptHandle, queueUrl);
 };
 const worker = async (event: SQSEvent) => {
